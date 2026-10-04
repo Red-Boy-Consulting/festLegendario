@@ -221,8 +221,6 @@ For environment variable configuration specific to each sample, refer to the REA
 >
 > ollama pull llama3.2
 >
->ollama run llama3.2
->
 > pip install agent-framework-ollama
 > 
 >You are responsible for carefully reviewing and testing applications you build using Microsoft Agent Framework in the context of your specific use cases, and making all appropriate decisions and customizations. This includes implementing your own responsible AI mitigations such as metaprompt, content filters, or other safety systems, and ensuring your applications meet appropriate quality, reliability, security, and trustworthiness standards. See also: [Transparency FAQ](./TRANSPARENCY_FAQ.md)
