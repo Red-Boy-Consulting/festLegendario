@@ -3,14 +3,13 @@
 import asyncio
 
 from agent_framework import Agent
-from agent_framework.foundry import FoundryChatClient
-from azure.identity import AzureCliCredential
+from agent_framework.ollama import OllamaChatClient
 
 """
 Hello Agent — Simplest possible agent
 
-This sample creates a minimal agent using FoundryChatClient via an
-Microsoft Foundry project endpoint, and runs it in both non-streaming and streaming modes.
+This sample creates a minimal agent using OllamaChatClient with a local
+Ollama model, and runs it in both non-streaming and streaming modes.
 
 There are XML tags in all of the get started samples, those are used to display the same code in the docs repo.
 """
@@ -18,11 +17,7 @@ There are XML tags in all of the get started samples, those are used to display 
 
 async def main() -> None:
     # <create_agent>
-    client = FoundryChatClient(
-        project_endpoint="https://your-project.services.ai.azure.com",
-        model="gpt-4o",
-        credential=AzureCliCredential(),
-    )
+    client = OllamaChatClient(model="llama3.2")
 
     agent = Agent(
         client=client,
