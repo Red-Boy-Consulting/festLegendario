@@ -220,7 +220,8 @@ For environment variable configuration specific to each sample, refer to the REA
 > winget install --exact --id Ollama.Ollama
 >
 > ollama pull llama3.2
-ollama run llama3.2
+>
+>ollama run llama3.2
 >
 > pip install agent-framework-ollama
 > 
