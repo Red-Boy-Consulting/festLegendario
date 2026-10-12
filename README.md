@@ -1,8 +1,3 @@
-> **Nota:** Este README fue recortado para dejar solo lo que usamos en este
-> proyecto (Ollama local). La documentación completa original de Microsoft
-> Agent Framework (instalación, Foundry, .NET, Go, troubleshooting general,
-> etc.) se movió a [`README.backup.md`](./README.backup.md).
-
 # RECOMENDACION DEL INGE LEGENDARIO
 
 Cómo correr un agente localmente usando **Ollama nativo** (sin Docker) y el
