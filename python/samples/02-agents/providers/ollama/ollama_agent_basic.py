@@ -37,34 +37,6 @@ def get_time(location: str) -> str:
     return f"The current time in {location} is {datetime.now().strftime('%I:%M %p')}."
 
 
-# --- Original fixed-query examples (kept for reference, not run by default) ---
-#
-# async def non_streaming_example() -> None:
-#     """Example of non-streaming response (get the complete result at once)."""
-#     agent = Agent(
-#         client=OllamaChatClient(),
-#         name="TimeAgent",
-#         instructions="You are a helpful time agent answer in one sentence.",
-#         tools=get_time,
-#     )
-#     query = "What time is it in Seattle? Use a tool call"
-#     result = await agent.run(query)
-#     print(f"Result: {result}\n")
-#
-# async def streaming_example() -> None:
-#     """Example of streaming response (get results as they are generated)."""
-#     agent = Agent(
-#         client=OllamaChatClient(),
-#         name="TimeAgent",
-#         instructions="You are a helpful time agent answer in one sentence.",
-#         tools=get_time,
-#     )
-#     query = "What time is it in San Francisco? Use a tool call"
-#     async for chunk in agent.run(query, stream=True):
-#         if chunk.text:
-#             print(chunk.text, end="", flush=True)
-
-
 async def _spinner(stop_event: asyncio.Event) -> None:
     """Print a rotating "thinking" indicator until stop_event is set.
 
@@ -95,7 +67,15 @@ async def interactive_chat() -> None:
     agent = Agent(
         client=OllamaChatClient(),
         name="Assistant",
-        instructions="You are a helpful assistant. Use the get_time tool when asked about the time.",
+        instructions=(
+            "You are a general-purpose helpful assistant that can discuss any topic. "
+            "You have access to a get_time tool that returns the current time for a "
+            "specific city. Only call that tool when the user explicitly asks what time "
+            "it is somewhere AND names a city. For greetings, general knowledge, how-to "
+            "questions, or anything else, just answer directly in plain text — never ask "
+            "the user for their location and never mention the get_time tool unless it "
+            "was actually used."
+        ),
         tools=get_time,
     )
 
