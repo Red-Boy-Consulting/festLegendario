@@ -16,10 +16,28 @@ concurrency:
 jobs:
   promote-apis:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
+      - name: Check GitHub App configuration
+        id: app-config
+        shell: bash
+        env:
+          APP_ID: ${{ secrets.GHA_TOKEN_PROVIDER_APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.GHA_TOKEN_PROVIDER_PEM }}
+        run: |
+          if [[ -n "$APP_ID" && -n "$APP_PRIVATE_KEY" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub App credentials are unavailable; using GITHUB_TOKEN. Enable 'Allow GitHub Actions to create and approve pull requests' in repository settings for PR creation."
+          fi
+
       - name: Generate GitHub App token
         id: app-token
+        if: steps.app-config.outputs.configured == 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ secrets.GHA_TOKEN_PROVIDER_APP_ID }}
@@ -29,6 +47,7 @@ jobs:
 
       - name: Get GitHub App user ID
         id: get-user-id
+        if: steps.app-config.outputs.configured == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -38,22 +57,24 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          token: ${{ steps.app-token.outputs.token }}
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - name: Configure git
         shell: pwsh
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
+          GIT_USER_NAME: ${{ steps.app-token.outputs.app-slug && format('{0}[bot]', steps.app-token.outputs.app-slug) || 'github-actions[bot]' }}
+          GIT_USER_EMAIL: ${{ steps.get-user-id.outputs.user-id && format('{0}+{1}[bot]@users.noreply.github.com', steps.get-user-id.outputs.user-id, steps.app-token.outputs.app-slug) || '41898282+github-actions[bot]@users.noreply.github.com' }}
         run: |
-          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
-          git config user.email "${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
+          git config user.name "$env:GIT_USER_NAME"
+          git config user.email "$env:GIT_USER_EMAIL"
           git config --global url."https://$($env:GH_TOKEN)@github.com/".insteadOf "https://github.com/"
 
       - name: Check for existing PR
         id: check_pr
         shell: pwsh
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           $branch = "${{ github.ref_name }}"
           $prBranch = "promote-shipped-apis-$branch"
@@ -115,7 +136,7 @@ jobs:
         if: steps.check_pr.outputs.pr_exists == 'false' && steps.check_changes.outputs.has_changes == 'true'
         shell: pwsh
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || github.token }}
         run: |
           $branch = "${{ github.ref_name }}"
           $prBranch = "promote-shipped-apis-$branch"
