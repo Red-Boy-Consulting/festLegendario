@@ -69,17 +69,32 @@ async def interactive_chat() -> None:
     Type a question and press Enter to get a streamed answer. Type
     "exit", "quit", "salir", "fin" or "adios" (or press Ctrl+C) to stop.
     """
-    base_instructions = (
+    no_browser_instructions = (
         "You are a general-purpose helpful assistant that can discuss any topic. "
         "You have access to a get_time tool that returns the current time for a "
         "specific city. Only call that tool when the user explicitly asks what time "
         "it is somewhere AND names a city. For greetings, general knowledge, how-to "
         "questions, or anything else, just answer directly in plain text — never ask "
         "the user for their location and never mention the get_time tool unless it "
-        "was actually used."
+        "was actually used. You do NOT have web browser automation tools (e.g. "
+        "Playwright) in this session. If asked whether you can browse the web, "
+        "click, navigate, or take screenshots, say honestly that you don't have "
+        "that capability right now — never claim you can do it when you can't."
     )
+    with_browser_instructions = no_browser_instructions.replace(
+        "You do NOT have web browser automation tools (e.g. "
+        "Playwright) in this session. If asked whether you can browse the web, "
+        "click, navigate, or take screenshots, say honestly that you don't have "
+        "that capability right now — never claim you can do it when you can't.",
+        "You also have browser automation tools (Playwright: navigate, click, "
+        "screenshot, etc.) available — use them whenever the user asks you to "
+        "browse or check a website.",
+    )
+    # base_instructions is what gets used if Playwright fails to connect and we
+    # fall back below; it must truthfully say the browser tools are NOT available.
+    base_instructions = no_browser_instructions
     tools: list[object] = [get_time]
-    instructions = base_instructions
+    instructions = no_browser_instructions
 
     # Playwright MCP gives the agent browser automation tools (navigate, click,
     # screenshot, etc.). It's optional because it requires Node.js/npx AND
@@ -101,7 +116,7 @@ async def interactive_chat() -> None:
                 args=["-y", "@playwright/mcp@latest"],
             )
         )
-        instructions += " You also have browser automation tools (Playwright) available when needed."
+        instructions = with_browser_instructions
 
     # OllamaChatClient() with no arguments reads OLLAMA_MODEL (which model to
     # use, e.g. "llama3.2") and OLLAMA_HOST (defaults to
@@ -118,9 +133,16 @@ async def interactive_chat() -> None:
     # internet to download the Playwright MCP package) or fails, give up
     # after PLAYWRIGHT_MCP_TIMEOUT_SECONDS and fall back to running without
     # it instead of leaving the user stuck on the "pensando..." spinner.
+    # 60s because the *first* run of `npx @playwright/mcp@latest` has to
+    # download the npm package (and npx itself resolving it) which can take
+    # well over 15s even with a working internet connection; subsequent runs
+    # are cached by npx and connect almost instantly.
+    PLAYWRIGHT_MCP_TIMEOUT_SECONDS = 60
+    if playwright_enabled:
+        print("Conectando Playwright MCP (puede tardar ~1 min la primera vez mientras se descarga)...")
     try:
         if playwright_enabled:
-            await asyncio.wait_for(agent.__aenter__(), timeout=15)
+            await asyncio.wait_for(agent.__aenter__(), timeout=PLAYWRIGHT_MCP_TIMEOUT_SECONDS)
         else:
             await agent.__aenter__()
     except Exception as exc:  # noqa: BLE001 - deliberately broad: any MCP/network failure falls back
