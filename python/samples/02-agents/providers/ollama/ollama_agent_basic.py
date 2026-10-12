@@ -26,6 +26,8 @@ https://ollama.com/
 # NOTE: approval_mode="never_require" is for sample brevity. Use "always_require" in production;
 # see samples/02-agents/tools/function_tool_with_approval.py
 # and samples/02-agents/tools/function_tool_with_approval_and_sessions.py.
+# This function is exposed to the model as a "tool" it can call by name
+# (the model decides when to invoke it based on the user's query).
 @tool(approval_mode="never_require")
 def get_time(location: str) -> str:
     """Get the current time."""
@@ -36,6 +38,9 @@ async def non_streaming_example() -> None:
     """Example of non-streaming response (get the complete result at once)."""
     print("=== Non-streaming Response Example ===")
 
+    # OllamaChatClient() with no arguments reads OLLAMA_MODEL (which model to
+    # use, e.g. "llama3.2") and OLLAMA_HOST (defaults to
+    # http://localhost:11434) from environment variables.
     agent = Agent(
         client=OllamaChatClient(),
         name="TimeAgent",
@@ -45,6 +50,8 @@ async def non_streaming_example() -> None:
 
     query = "What time is it in Seattle? Use a tool call"
     print(f"User: {query}")
+    # agent.run() blocks until the full answer is ready, including any
+    # intermediate tool call (get_time) the model decides to make.
     result = await agent.run(query)
     print(f"Result: {result}\n")
 
@@ -62,6 +69,9 @@ async def streaming_example() -> None:
     query = "What time is it in San Francisco? Use a tool call"
     print(f"User: {query}")
     print("Agent: ", end="", flush=True)
+    # stream=True yields the response incrementally as text chunks, useful
+    # for showing output to a user as it's generated instead of waiting
+    # for the full response.
     async for chunk in agent.run(query, stream=True):
         if chunk.text:
             print(chunk.text, end="", flush=True)
