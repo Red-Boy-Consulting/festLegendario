@@ -28,7 +28,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "uv==0.12.22",
+    "uv==0.12.23",
     "flit==4.1.0",
     "ruff==0.16.10",
     "pytest==9.1.1",
@@ -45,9 +45,9 @@ dev = [
     "opentelemetry-sdk",
     #tasks
     "poethepoet==0.48.0",
-    "rich>=13.7.1,<16.0.0",
-    "tomli==2.4.1",
-    "prek==0.5.4",
+    "rich>=15.0.0,<16.0.0",
+    "tomli==2.5.0",
+    "prek==0.5.5",
     "griffe==2.3.0",
 ]
 test = [
