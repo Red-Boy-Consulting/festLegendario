@@ -470,5 +470,5 @@ explicit = true
 name = "agent_framework_meta"
 
 [build-system]
-requires = ["flit-core >= 3.11,< 5.0"]
+requires = ["flit-core >= 4.1.0,< 5.0"]
 build-backend = "flit_core.buildapi"
