@@ -39,9 +39,9 @@ dev = [
     "pytest-retry==1.7.0",
     "mypy==2.4.0",
     "pyright==1.1.414",
-    "pyrefly==1.3.2",
-    "ty==0.0.84",
-    "zuban==0.10.0",
+    "pyrefly==1.4.0",
+    "ty==0.0.90",
+    "zuban==0.10.1",
     "opentelemetry-sdk",
     #tasks
     "poethepoet==0.48.0",
